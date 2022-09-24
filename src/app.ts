@@ -6,10 +6,12 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
 import { connect, set } from 'mongoose';
+import * as minio from 'minio';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from '@config';
 import { dbConnection } from '@databases';
+import { s3Connection } from '@s3';
 import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
@@ -25,6 +27,7 @@ class App {
     this.port = PORT || 3000;
 
     this.connectToDatabase();
+    this.connectToS3();
     this.initializeMiddlewares();
     this.initializeRoutes(routes);
     this.initializeSwagger();
@@ -49,7 +52,24 @@ class App {
       set('debug', true);
     }
 
-    connect(dbConnection.url, dbConnection.options);
+    connect(dbConnection.url);
+  }
+
+  private connectToS3() {
+    console.log({ s3Connection });
+    const s3Client = new minio.Client(s3Connection);
+    // const s3Client = new minio.Client({
+    //   endPoint: 'play.min.io',
+    //   port: 9443,
+    //   useSSL: true,
+    //   accessKey: 'Q3AM3UQ867SPQQA43P2F',
+    //   secretKey: 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG',
+    // });
+
+    s3Client.listBuckets((err: any, res: any) => {
+      if (err != null) console.log({ err });
+      console.log(res);
+    });
   }
 
   private initializeMiddlewares() {

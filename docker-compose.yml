@@ -77,7 +77,7 @@ services:
     networks:
       - backend
     # depends_on:
-    #   - minio1
+    #   - minio
     #   - minio2
     #   - minio3
     #   - minio4

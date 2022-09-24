@@ -2,5 +2,10 @@
 >> systemctl start docker
 >> docker-compose up [-d]
 >> docker-compose down
->> docker compose rm
+```
+
+Troubleshooting
+```bash
+>> docker-compose down --volumes
+>> docker-compose up --build
 ```
