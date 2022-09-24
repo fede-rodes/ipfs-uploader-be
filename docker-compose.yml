@@ -1,16 +1,86 @@
 version: '3.7'
 
+# Settings and configurations that are common for all containers
+# x-minio-common: &minio-common
+#   image: quay.io/minio/minio:RELEASE.2022-09-17T00-09-45Z
+#   command: server --console-address ":9001" http://minio{1...4}/data{1...2}
+#   expose:
+#     - "9000"
+#     - "9001"
+#   environment:
+#     MINIO_ROOT_USER: minioadmin
+#     MINIO_ROOT_PASSWORD: minioadmin
+#   healthcheck:
+#     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+#     interval: 30s
+#     timeout: 20s
+#     retries: 3
+
 services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2022-09-17T00-09-45Z
+    # image: minio/minio
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_storage:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+  # starts 4 docker containers running minio server instances.
+  # using nginx reverse proxy, load balancing, you can access
+  # it through port 9000.
+  # minio1:
+  #   <<: *minio-common
+  #   hostname: minio1
+  #   volumes:
+  #     - data1-1:/data1
+  #     - data1-2:/data2
+
+  # minio2:
+  #   <<: *minio-common
+  #   hostname: minio2
+  #   volumes:
+  #     - data2-1:/data1
+  #     - data2-2:/data2
+
+  # minio3:
+  #   <<: *minio-common
+  #   hostname: minio3
+  #   volumes:
+  #     - data3-1:/data1
+  #     - data3-2:/data2
+
+  # minio4:
+  #   <<: *minio-common
+  #   hostname: minio4
+  #   volumes:
+  #     - data4-1:/data1
+  #     - data4-2:/data2
   proxy:
     image: nginx:alpine
     container_name: proxy
     ports:
       - '80:80'
+      # - "9000:9000"
+      # - "9001:9001"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     restart: 'unless-stopped'
     networks:
       - backend
+    # depends_on:
+    #   - minio1
+    #   - minio2
+    #   - minio3
+    #   - minio4
   server:
     build:
       context: ./
@@ -44,3 +114,14 @@ networks:
 volumes:
   data:
     driver: local
+  minio_storage: {}
+  # By default this config uses default local driver,
+  # For custom volumes replace with volume driver configuration.
+  # data1-1:
+  # data1-2:
+  # data2-1:
+  # data2-2:
+  # data3-1:
+  # data3-2:
+  # data4-1:
+  # data4-2:
